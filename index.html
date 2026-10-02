@@ -195,6 +195,15 @@ body.h-short .demo{--dcell:36px}
 .hbar i{display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);
   background:var(--ok);box-shadow:0 0 10px var(--ok-glow);transition:transform var(--slow) var(--ease)}
 .topbar .title .caption{transition:color var(--base) var(--ease)}
+/* Секундомер: спокойный, без тиканья и красного. Золотой «+N» рядом — пока
+   бонус за скорость ещё достижим; время вышло — значок просто гаснет. */
+.topbar .title .sub{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden}
+.topbar .title .sub .sep{opacity:.5}
+.topbar .title .clock{font-variant-numeric:tabular-nums}
+.tbonus{color:var(--gold);font-weight:700;transition:opacity var(--slow) var(--ease),transform var(--slow) var(--ease)}
+.tbonus.gone{opacity:0;transform:scale(.8)}
+.win-time{margin:var(--s1) 0 0;text-align:center;color:var(--text-2);font:600 15px/1.3 var(--f)}
+.win-time b{color:var(--gold);font-weight:700}
 .topbar .title .caption.bump{animation:pop var(--slow) var(--spring)}
 .status.bad{color:var(--bad)}
 .status.ok{color:var(--ok)}
@@ -286,6 +295,8 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
   .coins{padding:0 var(--s2)}
   .topbar{gap:var(--s1)}
   .topbar .title b{font-size:15px}
+  /* на самых узких экранах в шапке остаётся секундомер, «осталось N» дублирует полоса прогресса */
+  .topbar .title .sub #gLeft,.topbar .title .sub .sep{display:none}
   .sheet h2{font-size:24px}
   /* на самых узких экранах у подсказки остаётся значок и цена — слово не влезает */
   .hint-btn .label{display:none}
@@ -371,7 +382,8 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
   <section id="game" class="screen" hidden>
     <div class="topbar">
       <button class="icon-btn" id="backBtn" data-i18n-aria="menu" aria-label="В меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <div class="title"><b class="num" id="gLevel">Уровень 1</b><span class="caption num" id="gLeft"></span></div>
+      <div class="title"><b class="num" id="gLevel">Уровень 1</b>
+        <span class="caption num sub"><span id="gLeft"></span><span class="sep">·</span><span class="clock" id="gTime">0:00</span><span class="tbonus" id="gBonus"></span></span></div>
       <span class="coins num" id="gCoinsBox"><svg class="coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#0A0918" stroke-opacity=".35" stroke-width="1.6"/></svg><span id="gCoins">0</span></span>
       <button class="icon-btn" id="soundBtn" aria-label="Звук"></button>
     </div>
@@ -415,6 +427,7 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
       <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
     </div>
     <div class="reward num"><span id="winReward">+0</span><svg class="coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#0A0918" stroke-opacity=".35" stroke-width="1.6"/></svg></div>
+    <p class="win-time num" id="winTime"></p>
     <p class="caption" id="winNote"></p>
     <div class="actions">
       <button class="btn btn-primary" id="nextBtn" data-i18n="next">Следующий уровень</button>
@@ -430,27 +443,9 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
     <div class="sheet-list">
       <button class="sheet-item" id="soundItem"><span data-i18n="soundLabel">Звук</span><span class="val" id="soundVal"></span></button>
       <button class="sheet-item" id="langItem"><span data-i18n="langLabel">Язык</span><span class="val" id="langVal">RU</span></button>
-      <button class="sheet-item" id="statsItem"><span data-i18n="statsLabel">Статистика</span><span class="val" id="statsVal"></span></button>
-      <button class="sheet-item" id="privacyItem"><span data-i18n="privacyTitle">Конфиденциальность</span></button>
       <button class="sheet-item" id="exitItem" hidden><span data-i18n="exitAria">Закрыть игру</span></button>
     </div>
     <div class="actions"><button class="btn btn-primary" id="menuClose" data-i18n="close">Закрыть</button></div>
-  </div>
-</div>
-
-<!-- ===== ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ ===== -->
-<div class="overlay" id="privacyOv" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
-  <div class="sheet">
-    <h2 id="privacyTitle" data-i18n="privacyTitle">Конфиденциальность</h2>
-    <div class="rules">
-      <p data-i18n-html="pp1"></p>
-      <p data-i18n-html="pp2"></p>
-      <p data-i18n-html="pp3"></p>
-      <p data-i18n-html="pp4"></p>
-      <p data-i18n-html="pp5"></p>
-      <p class="caption" id="ppContact"></p>
-    </div>
-    <div class="actions"><button class="btn btn-primary" id="privacyClose" data-i18n="close">Закрыть</button></div>
   </div>
 </div>
 
@@ -465,6 +460,7 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
       <p data-i18n-html="rule4"></p>
       <p data-i18n-html="rule5"></p>
       <p data-i18n-html="rule6"></p>
+      <p data-i18n-html="ruleTimer"></p>
       <p data-i18n-html="rule7"></p>
     </div>
     <div class="actions">
@@ -511,11 +507,15 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
    ===================================================================== */
 const CONFIG = {
   saveKey: 'knstrkt-chislovord-v1',
-  contactEmail: '',               // почта для связи в политике конфиденциальности
   genVersion: 2,                  // смена генератора — недоигранные уровни старой версии пересоздаются
   seedSalt: 0x5C1A,
   startCoins: 30,
   hintCost: 15,
+  // Секундомер: контрольное время уровня = база + секунды на каждую пустую клетку.
+  // Уложился — к награде добавляется доля базовой награды уровня.
+  parBaseSec: 20,
+  parPerBlankSec: 8,
+  fastBonusShare: 0.5,
   undoDepth: 60,                  // сколько ходов держим для отмены
   zoomMin: 1, zoomMax: 2.6,       // пределы масштаба поля при щипке двумя пальцами
   starCoins: [0, 0.5, 0.75, 1],   // доля награды уровня за 1 / 2 / 3 звезды
@@ -571,24 +571,19 @@ const I18N = {
     rulesBtn: 'Как играть', rulesTitle: 'Как играть', rulesOk: 'Понятно',
     menuTitle: 'Меню', menuAria: 'Открыть меню', close: 'Закрыть',
     soundLabel: 'Звук', langLabel: 'Язык', on: 'Вкл', off: 'Выкл',
-    statsLabel: 'Статистика', privacyTitle: 'Конфиденциальность',
-    pp1: 'Игра собирает <b>обезличенную статистику</b>: открытие игры, начало и прохождение уровней, выход с уровня, использование подсказок, смену языка. Мы не получаем ваше имя, профиль Gem Space и контакты.',
-    pp2: 'Статистика передаётся в сервис <b>Яндекс.Метрика</b>. Он использует cookie и технические данные устройства — тип устройства, браузер, примерную страну — по собственной политике конфиденциальности Яндекса.',
-    pp3: 'Мы используем статистику только чтобы понять, какие уровни слишком сложные, и улучшать игру. Не для рекламы, и мы её никому не продаём.',
-    pp4: 'Прогресс игры — уровень, монеты, звёзды — хранится только на вашем устройстве и никуда не отправляется.',
-    pp5: 'Отключить статистику можно в любой момент: <b>Меню → Статистика → Выкл</b>.',
-    ppContact: (v) => 'Вопросы по данным: ' + v.mail,
     rule1: 'Перетащите число из банка в пустую клетку. Или коснитесь числа, а потом клетки.',
     rule2: 'Сойтись должны <b>все</b> примеры сразу — и по строкам, и по столбцам. Клетка на пересечении работает на два примера одновременно.',
     rule3: 'Сначала умножение и деление, потом сложение и вычитание — как в школе. Деление всегда без остатка.',
     rule4: 'Ваши числа на поле <b class="g">зелёные</b>. Где ошибка, игра не показывает: если все клетки заполнены, а уровень не засчитан, значит какой-то пример не сходится — ищите сами.',
     rule5: 'Касание заполненной клетки возвращает число в банк. Числа можно перетаскивать между клетками и менять местами. Стрелка отменяет последний ход, круговая стрелка убирает с поля все числа.',
     rule6: 'Подсказка ставит верное число за монеты, такая клетка остаётся зелёной, но с пунктиром, и больше не двигается. Монеты даются за пройденные уровни. Каждая подсказка снимает звезду, ошибка — ещё одну.',
+    ruleTimer: 'Под номером уровня идёт секундомер. Рядом с ним горит <b class="p">золотой бонус</b> — столько монет добавится к награде, если решить уровень за отведённое время. Не успели — ничего страшного: бонус просто гаснет, звёзды за скорость не снимаются. Время идёт, только пока вы на поле, — в меню и в свёрнутой игре оно стоит.',
     rule7: 'Поле увеличивается щипком двумя пальцами, двумя же пальцами двигается. Двойное касание по пустому месту возвращает обычный масштаб.',
     hint: 'Подсказка',
     hintPoor: (v) => 'Подсказка стоит ' + v.n + ' ' + plural(v.n, 'монету', 'монеты', 'монет') + '. Монеты даются за пройденные уровни.',
     left: (v) => 'Осталось заполнить: ' + v.n,
     leftShort: (v) => 'осталось ' + v.n, leftNone: 'всё заполнено',
+    winTime: (v) => 'Время ' + v.t, winFast: (v) => 'Быстро! +' + v.n,
     pickCell: (v) => 'Выберите клетку для числа ' + v.n,
     pickNumber: 'Выберите число из банка',
     hasErrors: 'Поле заполнено, но что-то не сходится',
@@ -608,24 +603,19 @@ const I18N = {
     rulesBtn: 'How to play', rulesTitle: 'How to play', rulesOk: 'Got it',
     menuTitle: 'Menu', menuAria: 'Open menu', close: 'Close',
     soundLabel: 'Sound', langLabel: 'Language', on: 'On', off: 'Off',
-    statsLabel: 'Statistics', privacyTitle: 'Privacy',
-    pp1: 'The game collects <b>anonymous statistics</b>: app opens, level starts and completions, leaving a level, hint use, and language changes. We never receive your name, Gem Space profile, or contact details.',
-    pp2: 'Statistics are sent to <b>Yandex Metrica</b>. It uses cookies and technical device data — device type, browser, approximate country — under Yandex’s own privacy policy.',
-    pp3: 'We use these statistics only to see which levels are too hard and to improve the game. Never for advertising, and we never sell them.',
-    pp4: 'Your progress — level, coins, stars — is stored only on your device and is never sent anywhere.',
-    pp5: 'You can turn statistics off at any time: <b>Menu → Statistics → Off</b>.',
-    ppContact: (v) => 'Questions about your data: ' + v.mail,
     rule1: 'Drag a number from the bank into an empty cell. Or tap the number, then the cell.',
     rule2: '<b>Every</b> sum has to check out at once, across and down. A cell where two sums cross belongs to both of them.',
     rule3: 'Multiplication and division come first, then addition and subtraction. Division is always exact.',
     rule4: 'The numbers you place are <b class="g">green</b>. The game will not point at your mistake: if every cell is filled and the level still is not done, some sum does not add up — find it yourself.',
     rule5: 'Tap a filled cell to send its number back to the bank. Numbers can be dragged between cells and swapped. The arrow undoes your last move, the circle clears the whole grid.',
     rule6: 'A hint places one correct number for coins; that cell stays green but dashed, and cannot be moved. Coins come from finished levels. Every hint costs a star, and a mistake costs one more.',
+    ruleTimer: 'A stopwatch runs under the level number. Next to it glows a <b class="p">gold bonus</b> — the coins you get on top of the reward if you solve the level within the time limit. Missed it? No problem: the bonus simply fades, and speed never costs you a star. The clock only runs while you are on the grid — it stops in the menu and when the game is in the background.',
     rule7: 'Pinch with two fingers to zoom the grid in, and drag it with two fingers. Double-tap an empty spot to get back to normal size.',
     hint: 'Hint',
     hintPoor: (v) => 'A hint costs ' + v.n + ' coins. You earn coins by finishing levels.',
     left: (v) => 'Cells left: ' + v.n,
     leftShort: (v) => v.n + ' left', leftNone: 'all filled',
+    winTime: (v) => 'Time ' + v.t, winFast: (v) => 'Fast! +' + v.n,
     pickCell: (v) => 'Now pick a cell for ' + v.n,
     pickNumber: 'Now pick a number from the bank',
     hasErrors: 'The grid is full, but something does not add up',
@@ -1140,7 +1130,7 @@ const FX = (() => {
 /* =====================================================================
    Состояние
    ===================================================================== */
-const defaults = () => ({ level: 1, coins: CONFIG.startCoins, stars: 0, sound: true, stats: true, lang: detectLang(), seenRules: false, run: null });
+const defaults = () => ({ level: 1, coins: CONFIG.startCoins, stars: 0, sound: true, lang: detectLang(), seenRules: false, run: null });
 let save = defaults();
 let state = 'boot';            // boot → menu → playing → won → playing | menu
 let run = null;                // текущий уровень: пазл, расстановка, подсказки, ошибки
@@ -1164,7 +1154,6 @@ function sanitize(d) {
   out.stars = Number.isFinite(st) && st >= 0 ? Math.floor(st) : 0;
   out.sound = d.sound !== false;
   out.lang = I18N[d.lang] ? d.lang : detectLang();
-  out.stats = d.stats !== false;
   out.seenRules = d.seenRules === true;
   out.run = validRun(d.run, out.level) ? d.run : null;
   return out;
@@ -1191,12 +1180,15 @@ function validRun(rn, level) {
     rn.hints = Math.max(0, Number(rn.hints) || 0);
     rn.mistakes = Math.max(0, Number(rn.mistakes) || 0);
     rn.wasFull = rn.wasFull === true;
+    rn.time = Number.isFinite(Number(rn.time)) && Number(rn.time) >= 0 ? Math.min(Number(rn.time), 864e5) : 0;
     return true;
   } catch (e) { return false; }
 }
 
 let saveTimer = 0;
 function persist(now) {
+  // секундомер не останавливаем, но в сейв пишем актуальное время
+  if (run && clockRunning()) { run.time = Math.round(elapsedMs()); clockFrom = performance.now(); }
   clearTimeout(saveTimer);
   if (now) store.set(CONFIG.saveKey, save);
   else saveTimer = setTimeout(() => store.set(CONFIG.saveKey, save), 250);
@@ -1278,6 +1270,7 @@ function reportPause() {
 }
 function goMenu() {
   reportAbandon();
+  clockStop();
   if (history.state && history.state.s === 'game') {
     navLock = true;
     try { history.back(); } catch (e) { /* ничего */ }
@@ -1339,7 +1332,7 @@ function startLevel() {
   if (save.run && save.run.level === lv) run = save.run;
   else {
     const pz = generate(lv);
-    run = { level: lv, puzzle: pz, board: pz.cells.map(() => -1), locked: [], hints: 0, mistakes: 0, wasFull: false };
+    run = { level: lv, puzzle: pz, board: pz.cells.map(() => -1), locked: [], hints: 0, mistakes: 0, wasFull: false, time: 0 };
   }
   save.run = run;
   P = run.puzzle;
@@ -1365,6 +1358,9 @@ function startLevel() {
   requestAnimationFrame(() => { fitBank(); fitBoard(); });
   persist();
   abandonSent = null; pauseSent = null;
+  clockFrom = 0;
+  renderClock();
+  clockStart();
   analytics.hit('level_start', { level: lv, resumed: isResume ? 1 : 0 });
 }
 
@@ -1525,6 +1521,49 @@ function checkShort() {
    ===================================================================== */
 function clearSel() { sel.tile = -1; sel.cell = -1; typed = ''; clearTimeout(typedTimer); }
 
+/* =====================================================================
+   Секундомер уровня. Идёт только на игровом экране, пока игра на виду:
+   в меню, на экране победы и в свёрнутой игре стоит. Накопленное время
+   хранится в run.time и сохраняется вместе с уровнем.
+   ===================================================================== */
+let clockFrom = 0, clockTimer = 0;
+const clockRunning = () => clockFrom > 0;
+function elapsedMs() { return (run ? run.time || 0 : 0) + (clockRunning() ? performance.now() - clockFrom : 0); }
+function parSec() { return CONFIG.parBaseSec + CONFIG.parPerBlankSec * P.blanks.length; }
+function fastBonus() { return Math.round(levelParams(run.level).T.reward * CONFIG.fastBonusShare); }
+function fmtTime(ms) {
+  const total = Math.floor(ms / 1000), h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), sec = total % 60;
+  const ss = String(sec).padStart(2, '0');
+  return h ? h + ':' + String(m).padStart(2, '0') + ':' + ss : m + ':' + ss;
+}
+function renderClock() {
+  if (!run || !P) return;
+  const ms = elapsedMs();
+  $('gTime').textContent = fmtTime(ms);
+  const b = $('gBonus'), inTime = ms / 1000 <= parSec();
+  b.textContent = '+' + fastBonus();
+  b.classList.toggle('gone', !inTime);
+}
+function clockTick() {
+  clearTimeout(clockTimer);
+  if (!clockRunning()) return;
+  renderClock();
+  // следующий тик — ровно к смене секунды, без дрейфа
+  clockTimer = setTimeout(clockTick, 1000 - (elapsedMs() % 1000) + 5);
+}
+function clockStart() {
+  if (clockRunning() || state !== 'playing' || document.hidden || !run) return;
+  clockFrom = performance.now();
+  clockTick();
+}
+function clockStop() {
+  if (!clockRunning()) return;
+  run.time = Math.max(0, Math.round(elapsedMs()));
+  clockFrom = 0;
+  clearTimeout(clockTimer);
+  renderClock();
+}
+
 /* Отмена хода: снимок расстановки перед каждым изменением. Клетки от подсказки
    не откатываем — монеты уже потрачены, иначе подсказку можно было бы отменять. */
 function snapshot() {
@@ -1650,12 +1689,15 @@ function resetBoard() {
 }
 
 function win() {
+  clockStop();
   state = 'won';
   clearSel();
   renderAll();
   const stars = clamp(3 - run.hints - (run.mistakes > 0 ? 1 : 0), 1, 3);
-  const reward = Math.round(levelParams(run.level).T.reward * CONFIG.starCoins[stars]);
-  analytics.hit('level_complete', { level: run.level, stars, hints: run.hints, mistakes: run.mistakes, reward });
+  const sec = Math.round((run.time || 0) / 1000);
+  const bonus = sec <= parSec() ? fastBonus() : 0;
+  const reward = Math.round(levelParams(run.level).T.reward * CONFIG.starCoins[stars]) + bonus;
+  analytics.hit('level_complete', { level: run.level, stars, hints: run.hints, mistakes: run.mistakes, reward, sec, fast: bonus ? 1 : 0 });
   save.coins += reward;
   save.stars += stars;
   save.level = run.level + 1;
@@ -1668,6 +1710,7 @@ function win() {
   const svgs = $('winStars').querySelectorAll('svg');
   svgs.forEach((s, i) => s.classList.toggle('on', i < stars));
   $('winReward').textContent = '+' + reward;
+  $('winTime').innerHTML = t('winTime', { t: fmtTime(run.time || 0) }) + (bonus ? ' · <b>' + t('winFast', { n: bonus }) + '</b>' : '');
   $('winNote').textContent = stars === 3 ? t('winClean') : t('winNote', { h: run.hints, m: run.mistakes });
   setTimeout(() => { if (state === 'won') { showOverlay('winOv'); $('nextBtn').focus({ preventScroll: true }); } }, 700);
 }
@@ -1910,7 +1953,7 @@ document.addEventListener('keydown', (e) => {
   if (ov) {
     if (e.key !== 'Escape') return;
     if (ov.id === 'rulesOv') closeRules();
-    else if (ov.id === 'menuOv' || ov.id === 'privacyOv') hideOverlay(ov.id);
+    else if (ov.id === 'menuOv') hideOverlay('menuOv');
     return;
   }
   if (state !== 'playing') return;
@@ -1935,7 +1978,6 @@ document.addEventListener('keydown', (e) => {
    ===================================================================== */
 function renderBurger() {
   $('soundVal').textContent = save.sound ? t('on') : t('off');
-  $('statsVal').textContent = save.stats ? t('on') : t('off');
   $('langVal').textContent = save.lang === 'ru' ? 'RU' : 'EN';
   $('exitItem').hidden = !gemBridge.available;
 }
@@ -1989,23 +2031,6 @@ onTap('menuOv', (e) => { if (e.target.id === 'menuOv') hideOverlay('menuOv'); })
 onTap('soundItem', () => { toggleSound(); renderBurger(); });
 onTap('langItem', () => { toggleLang(); renderBurger(); });
 onTap('exitItem', () => { persist(true); gemBridge.close(); });
-onTap('statsItem', () => {
-  save.stats = !save.stats;
-  analytics.setEnabled(save.stats);
-  renderBurger();
-  audio.play('pick');
-  persist();
-});
-onTap('privacyItem', () => {
-  hideOverlay('menuOv');
-  const c = $('ppContact');
-  c.textContent = CONFIG.contactEmail ? t('ppContact', { mail: CONFIG.contactEmail }) : '';
-  c.hidden = !CONFIG.contactEmail;
-  showOverlay('privacyOv');
-  $('privacyClose').focus({ preventScroll: true });
-});
-onTap('privacyClose', () => hideOverlay('privacyOv'));
-onTap('privacyOv', (e) => { if (e.target.id === 'privacyOv') hideOverlay('privacyOv'); });
 onTap('soundBtn', toggleSound);
 onTap('backBtn', goMenu);
 onTap('hintBtn', () => { audio.resume(); useHint(); });
@@ -2072,10 +2097,12 @@ document.addEventListener('visibilitychange', () => {
     DEMO.stop();
     // свернул или закрыл игру посреди уровня
     reportPause();
+    clockStop();
   } else if (state === 'menu' || state === 'boot') DEMO.start();   // не крутим анимацию в фоне
+  else if (state === 'playing') clockStart();
 });
 // закрытие вкладки или вебвью: последний ход не должен потеряться в отложенном сохранении
-window.addEventListener('pagehide', () => persist(true));
+window.addEventListener('pagehide', () => { clockStop(); persist(true); });
 
 /* =====================================================================
    Превью на начальном экране: кроссворд решает сам себя по кругу.
@@ -2183,12 +2210,8 @@ const DEMO = (() => {
 const analytics = (() => {
   const ID = 113310085;
   let ready = false;
-  let loaded = false;
   function init() {
     if (location.protocol === 'file:') return;    // локальная проверка — событий не шлём
-    if (!save.stats) return;                      // игрок отключил статистику в меню
-    if (loaded) { ready = true; return; }
-    loaded = true;
     try {
       (function (m, e, t, r, i, k, a) {
         m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
@@ -2206,9 +2229,7 @@ const analytics = (() => {
     if (!ready) return;
     try { if (typeof ym === 'function') ym(ID, 'reachGoal', name, params || {}); } catch (e) { /* не критично */ }
   }
-  // выключение действует сразу: следующие события просто не отправляются
-  function setEnabled(on) { if (on) init(); else ready = false; }
-  return { init, hit, setEnabled };
+  return { init, hit };
 })();
 
 /* =====================================================================
