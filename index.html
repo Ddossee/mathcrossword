@@ -8,6 +8,19 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Математический кроссворд</title>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113310085', 'ym');
+
+    ym(113310085, 'init', {ssr:true, clickmap:true, referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/113310085" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
 <style>
 :root{
   /* Цвет: та же индиго-база и неон, что в 2048 Neon и «Крестиках-ноликах» */
@@ -346,11 +359,6 @@ body.h-short .menu-scroll{gap:var(--s4);padding-top:0}
 </style>
 </head>
 <body>
-<!-- Yandex.Metrika noscript pixel: тот же счётчик 113310085, что инициализирует
-     модуль analytics ниже по скрипту. Нужен только как статический резерв —
-     чтобы автоматическая проверка на стороне Яндекса находила счётчик на
-     странице без выполнения JS; на обезличенные события (analytics.hit) не влияет. -->
-<noscript><div><img src="https://mc.yandex.ru/watch/113310085" style="position:absolute;left:-9999px;" alt="" /></div></noscript>
 <canvas id="fx" aria-hidden="true"></canvas>
 <div id="app">
 
@@ -2207,34 +2215,19 @@ const DEMO = (() => {
 /* =====================================================================
    Яндекс.Метрика: только обезличенные события самой игры — какие уровни
    проходят, где бросают, берут ли подсказку. Никаких данных профиля
-   Gem Space. Если домен счётчика недоступен или скрипт заблокирован,
-   игра этого не замечает: инициализация и каждый вызов в try/catch,
-   и ни одна из этих ошибок никогда не трогает gemBridge.ready() —
-   платформа получает сигнал готовности независимо от аналитики.
+   Gem Space. Сам счётчик подключён в <head>; здесь только отправка целей.
+   Если скрипт Метрики заблокирован или не загрузился, ym — просто очередь
+   в памяти: игра ничего не замечает, а сигнал gemBridge.ready() уходит
+   платформе независимо от аналитики.
+   Каждая цель должна быть заведена в интерфейсе Метрики как «JavaScript-
+   событие» с тем же идентификатором — иначе в отчётах её не будет.
    ===================================================================== */
 const analytics = (() => {
   const ID = 113310085;
-  let ready = false;
-  function init() {
-    if (location.protocol === 'file:') return;    // локальная проверка — событий не шлём
-    try {
-      (function (m, e, t, r, i, k, a) {
-        m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
-        m[i].l = 1 * new Date();
-        for (a = 0; a < document.scripts.length; a++) { if (document.scripts[a].src === r) return; }
-        k = e.createElement(t); a = e.getElementsByTagName(t)[0];
-        k.async = 1; k.src = r; k.onerror = () => { ready = false; };
-        a.parentNode.insertBefore(k, a);
-      })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-      ym(ID, 'init', { ssr: true, webvisor: false, clickmap: false, trackLinks: false, accurateTrackBounce: true });
-      ready = true;
-    } catch (e) { ready = false; }
-  }
   function hit(name, params) {
-    if (!ready) return;
-    try { if (typeof ym === 'function') ym(ID, 'reachGoal', name, params || {}); } catch (e) { /* не критично */ }
+    try { if (typeof window.ym === 'function') window.ym(ID, 'reachGoal', name, params || {}); } catch (e) { /* не критично */ }
   }
-  return { init, hit };
+  return { hit };
 })();
 
 /* =====================================================================
@@ -2251,7 +2244,6 @@ async function boot() {
   state = 'menu';
   applyLang();                       // язык из сейва перекрывает системный
   requestAnimationFrame(() => gemBridge.ready());   // интерфейс отрисован — сообщаем платформе
-  analytics.init();
   analytics.hit('app_open', { platform: gemBridge.available ? 'gemspace' : 'web', lang: save.lang });
   if (!save.seenRules) openRules();
 }
